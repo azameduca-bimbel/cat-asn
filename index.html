@@ -11,37 +11,96 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Chart.js untuk Grafik Analisis -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700;800&display=swap');
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* RESET & BASE SHARPNESS */
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    background-color: #f8fafc; /* Slate 50: Latar belakang bersih */
+    color: #1e293b; /* Slate 800: Teks tajam */
+    scroll-behavior: smooth;
+  }
 
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-    }
+  /* TYPOGRAPHY OPTIMIZATION */
+  .soal-utama {
+    font-size: 1.125rem; /* 18px */
+    line-height: 1.6;
+    color: #0f172a; /* Slate 900: Hitam pekat agar sangat tajam */
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
 
-    @keyframes scaleUp {
-      from {
-        opacity: 0;
-        transform: scale(0.95);
-      }
+  .opsi-teks {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #334155;
+    line-height: 1.5;
+  }
 
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
+  /* ANIMATIONS */
+  @keyframes scaleUp {
+    from { opacity: 0; transform: scale(0.98) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
 
-    .animate-scale-up {
-      animation: scaleUp 0.3s ease-out forwards;
-    }
+  .animate-scale-up {
+    animation: scaleUp 0.3s ease-out forwards;
+  }
 
-    .animate-pulse-slow {
-      animation: pulse 3s infinite;
-    }
-  </style>
+  /* CUSTOM COMPONENTS */
+  
+  /* Area kartu soal */
+  .card-soal {
+    background: #ffffff;
+    border: 1px solid #e2e8f0; /* Slate 200 */
+    border-radius: 1.25rem;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+
+  /* Item pilihan jawaban */
+  .opsi-item {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
+    background: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+
+  .opsi-item:active {
+    transform: scale(0.98);
+  }
+
+  /* Utility untuk navigasi nomor di mobile */
+  .nav-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .nav-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Glassmorphism Effect untuk Header/Footer Sticky */
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(226, 232, 240, 0.8);
+  }
+
+  /* Khusus Header Sticky Ujian */
+  .sticky-header-ujian {
+    background: rgba(248, 250, 252, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid #e2e8f0;
+  }
+</style>
 </head>
 
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
-
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
   <!-- APP CONTAINER -->
   <div id="app" class="flex-grow flex flex-col">
     <!-- Navbar -->
@@ -67,7 +126,7 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 mt-auto">
+    <footer class="bg-slate-900 text-slate-600  py-6 border-t border-slate-800 mt-auto">
       <div class="max-w-7xl mx-auto px-4 text-center text-sm">
         <p>&copy; 2026 CAT ASN/STAN Portal. Dikembangkan secara mandiri & 100% Gratis menggunakan Google Sheets
           Integration.</p>
@@ -171,55 +230,55 @@
         body: JSON.stringify({ action: 'save_riwayat', data: riwayatData })
       });
     }
-async function syncWithCloud() {
-  const statusEl = document.getElementById('status-koneksi');
-  if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Sinkronisasi Cloud...';
+    async function syncWithCloud() {
+      const statusEl = document.getElementById('status-koneksi');
+      if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Sinkronisasi Cloud...';
 
-  try {
-    const response = await fetch(GAS_WEB_APP_URL);
-    const result = await response.json();
+      try {
+        const response = await fetch(GAS_WEB_APP_URL);
+        const result = await response.json();
 
-    if (result.status === 'success' && result.data) {
-      // 1. SINKRON USER & VALIDASI EXPIRED
-      if (result.data.users) {
-        const now = new Date();
-        const validatedUsers = result.data.users.map(u => {
-          if (u.access_level === 'premium' && u.tanggal_habis) {
-            if (now > new Date(u.tanggal_habis)) u.access_level = 'free';
+        if (result.status === 'success' && result.data) {
+          // 1. SINKRON USER & VALIDASI EXPIRED
+          if (result.data.users) {
+            const now = new Date();
+            const validatedUsers = result.data.users.map(u => {
+              if (u.access_level === 'premium' && u.tanggal_habis) {
+                if (now > new Date(u.tanggal_habis)) u.access_level = 'free';
+              }
+              return u;
+            });
+            setDB('cat_users', validatedUsers);
+            if (currentUser) {
+              const updatedMe = validatedUsers.find(u => u.id_user === currentUser.id_user);
+              if (updatedMe) currentUser = updatedMe;
+            }
           }
-          return u;
-        });
-        setDB('cat_users', validatedUsers);
-        if (currentUser) {
-          const updatedMe = validatedUsers.find(u => u.id_user === currentUser.id_user);
-          if (updatedMe) currentUser = updatedMe;
+
+          // 2. SINKRON SOAL (PENTING!)
+          if (result.data.soal) {
+            const cleanedSoal = result.data.soal.map(s => {
+              if (typeof s.bobot_nilai === 'string') {
+                try { s.bobot_nilai = JSON.parse(s.bobot_nilai); }
+                catch (e) { s.bobot_nilai = { "A": 0, "B": 0, "C": 5, "D": 0, "E": 0 }; }
+              }
+              s.pembahasan = s.pembahasan || s.penjelasan || "Tidak ada pembahasan.";
+              return s;
+            });
+            setDB('cat_soal', cleanedSoal);
+          }
+
+          // 3. SINKRON TRYOUT & RIWAYAT
+          if (result.data.tryout) setDB('cat_tryout', result.data.tryout);
+          if (result.data.riwayat) setDB('cat_riwayat', result.data.riwayat);
+
+          if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-400 mr-1"></i> Cloud Active';
+          if (activePage === 'dashboard_peserta') renderDashboardPeserta();
         }
+      } catch (err) {
+        if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-cloud-arrow-down text-rose-400 mr-1"></i> Mode Offline';
       }
-
-      // 2. SINKRON SOAL (PENTING!)
-      if (result.data.soal) {
-        const cleanedSoal = result.data.soal.map(s => {
-          if (typeof s.bobot_nilai === 'string') {
-            try { s.bobot_nilai = JSON.parse(s.bobot_nilai); } 
-            catch(e) { s.bobot_nilai = { "A":0, "B":0, "C":5, "D":0, "E":0 }; }
-          }
-          s.pembahasan = s.pembahasan || s.penjelasan || "Tidak ada pembahasan.";
-          return s;
-        });
-        setDB('cat_soal', cleanedSoal);
-      }
-
-      // 3. SINKRON TRYOUT & RIWAYAT
-      if (result.data.tryout) setDB('cat_tryout', result.data.tryout);
-      if (result.data.riwayat) setDB('cat_riwayat', result.data.riwayat);
-
-      if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-cloud-check text-emerald-400 mr-1"></i> Cloud Active';
-      if (activePage === 'dashboard_peserta') renderDashboardPeserta();
     }
-  } catch (err) {
-    if (statusEl) statusEl.innerHTML = '<i class="fa-solid fa-cloud-arrow-down text-rose-400 mr-1"></i> Mode Offline';
-  }
-}
     async function registerToCloud(userData) {
       try {
         await fetch(GAS_WEB_APP_URL, {
@@ -414,7 +473,7 @@ async function syncWithCloud() {
 
             <div class="relative flex py-2 items-center">
               <div class="flex-grow border-t border-slate-200"></div>
-              <span class="flex-shrink mx-4 text-slate-400 text-xs uppercase">Atau Masuk Manual</span>
+              <span class="flex-shrink mx-4 text-slate-600  text-xs uppercase">Atau Masuk Manual</span>
               <div class="flex-grow border-t border-slate-200"></div>
             </div>
 
@@ -422,7 +481,7 @@ async function syncWithCloud() {
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1">Email</label>
                 <div class="relative">
-                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-600 ">
                     <i class="fa-regular fa-envelope"></i>
                   </span>
                   <input type="email" id="login-email" required class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm transition" placeholder="nama@email.com">
@@ -432,7 +491,7 @@ async function syncWithCloud() {
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1">Kata Sandi</label>
                 <div class="relative">
-                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-600 ">
                     <i class="fa-solid fa-lock"></i>
                   </span>
                   <input type="password" id="login-password" required class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm transition" placeholder="••••••••">
@@ -483,7 +542,7 @@ async function syncWithCloud() {
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1">Nama Lengkap</label>
                 <div class="relative">
-                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fa-regular fa-user"></i></span>
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-600 "><i class="fa-regular fa-user"></i></span>
                   <input type="text" id="reg-nama" required class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition" placeholder="Mis: Ahmad Budi">
                 </div>
               </div>
@@ -491,7 +550,7 @@ async function syncWithCloud() {
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1">Email Aktif</label>
                 <div class="relative">
-                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fa-regular fa-envelope"></i></span>
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-600 "><i class="fa-regular fa-envelope"></i></span>
                   <input type="email" id="reg-email" required class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition" placeholder="nama@email.com">
                 </div>
               </div>
@@ -499,7 +558,7 @@ async function syncWithCloud() {
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1">Kata Sandi</label>
                 <div class="relative">
-                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fa-solid fa-lock"></i></span>
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-600 "><i class="fa-solid fa-lock"></i></span>
                   <input type="password" id="reg-password" required minlength="6" class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm transition" placeholder="Minimal 6 karakter">
                 </div>
               </div>
@@ -507,7 +566,7 @@ async function syncWithCloud() {
               <div>
                 <label class="block text-sm font-semibold text-slate-700 mb-1">Wilayah / Provinsi</label>
                 <div class="relative">
-                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"><i class="fa-solid fa-map-location-dot"></i></span>
+                  <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-600 "><i class="fa-solid fa-map-location-dot"></i></span>
                   <select id="reg-wilayah" class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white transition">
                     <option value="DKI Jakarta">DKI Jakarta</option>
                     <option value="Jawa Barat">Jawa Barat</option>
@@ -682,7 +741,7 @@ async function syncWithCloud() {
                 <h3 class="text-lg font-extrabold text-slate-800">
                   <i class="fa-solid fa-file-signature text-indigo-600 mr-2"></i>Daftar Try Out SKD
                 </h3>
-                <span class="text-xs text-slate-400">Tersedia ${allTryouts.length} Paket</span>
+                <span class="text-xs text-slate-600 ">Tersedia ${allTryouts.length} Paket</span>
               </div>
               
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -702,7 +761,7 @@ async function syncWithCloud() {
           // BELUM MULAI
           statusLabel = `<span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fa-regular fa-clock mr-1"></i>BELUM DIBUKA</span>`;
           btnHtml = `
-          <button disabled class="w-full bg-slate-200 text-slate-400 font-bold py-2 rounded-lg text-xs cursor-not-allowed">
+          <button disabled class="w-full bg-slate-200 text-slate-600  font-bold py-2 rounded-lg text-xs cursor-not-allowed">
             Mulai ${startTime.toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
           </button>`;
         } else if (now > endTime) {
@@ -735,7 +794,7 @@ async function syncWithCloud() {
             ${statusLabel}
           </div>
           <h4 class="font-bold text-slate-800 mb-1">${to.judul_tryout}</h4>
-          <p class="text-[10px] text-slate-400 mb-3">
+          <p class="text-[10px] text-slate-600  mb-3">
              <i class="fa-solid fa-calendar-day mr-1"></i> ${startTime.toLocaleDateString('id-ID')} s/d ${endTime.toLocaleDateString('id-ID')}
           </p>
         </div>
@@ -825,7 +884,7 @@ async function syncWithCloud() {
               <h3 class="text-base font-extrabold text-slate-800 mb-4"><i class="fa-solid fa-trophy text-indigo-600 mr-2"></i>Ranking</h3>
               <div class="flex space-x-2 border-b border-slate-100 mb-4 text-xs font-bold">
                 <button id="rank-tab-nasional" onclick="switchRankTab('nasional')" class="flex-1 pb-2 border-b-2 border-indigo-600 text-indigo-600">Nasional</button>
-                <button id="rank-tab-wilayah" onclick="switchRankTab('wilayah')" class="flex-1 pb-2 border-b-2 border-transparent text-slate-400">Wilayah</button>
+                <button id="rank-tab-wilayah" onclick="switchRankTab('wilayah')" class="flex-1 pb-2 border-b-2 border-transparent text-slate-600 ">Wilayah</button>
               </div>
               <div class="space-y-2 max-h-60 overflow-y-auto pr-1" id="ranking-list-container"></div>
             </div>
@@ -859,25 +918,25 @@ async function syncWithCloud() {
       }
     }
     // 1. TAMPILKAN INSTRUKSI PEMBAYARAN
-function upgradeToPremium() {
-  if (!currentUser) return;
+    function upgradeToPremium() {
+      if (!currentUser) return;
 
-  const idNumbers = currentUser.id_user.replace(/\D/g, '');
-  const uniqueCode = idNumbers.slice(-3).padStart(3, '0');
-  const nominal = 49000 + parseInt(uniqueCode);
+      const idNumbers = currentUser.id_user.replace(/\D/g, '');
+      const uniqueCode = idNumbers.slice(-3).padStart(3, '0');
+      const nominal = 49000 + parseInt(uniqueCode);
 
-  const modal = document.getElementById('custom-modal');
-  const titleEl = document.getElementById('modal-title');
-  const msgEl = document.getElementById('modal-message');
-  const iconEl = document.getElementById('modal-icon');
-  const btnCancel = document.getElementById('modal-btn-cancel');
-  const btnOk = document.getElementById('modal-btn-ok');
+      const modal = document.getElementById('custom-modal');
+      const titleEl = document.getElementById('modal-title');
+      const msgEl = document.getElementById('modal-message');
+      const iconEl = document.getElementById('modal-icon');
+      const btnCancel = document.getElementById('modal-btn-cancel');
+      const btnOk = document.getElementById('modal-btn-ok');
 
-  titleEl.innerText = "Upgrade Akun Premium";
-  iconEl.innerHTML = `<i class="fa-solid fa-crown text-xl text-amber-600"></i>`;
-  iconEl.className = "p-2 bg-amber-100 rounded-full";
+      titleEl.innerText = "Upgrade Akun Premium";
+      iconEl.innerHTML = `<i class="fa-solid fa-crown text-xl text-amber-600"></i>`;
+      iconEl.className = "p-2 bg-amber-100 rounded-full";
 
-  msgEl.innerHTML = `
+      msgEl.innerHTML = `
     <div class="space-y-4 text-center">
       <p class="text-[11px] text-slate-500">Silakan scan QRIS di bawah ini untuk aktivasi fitur Premium selamanya.</p>
       <div class="bg-white p-3 border-2 border-slate-100 rounded-2xl inline-block shadow-sm">
@@ -891,25 +950,25 @@ function upgradeToPremium() {
       </div>
     </div>`;
 
-  btnCancel.innerText = "Batal";
-  btnCancel.classList.remove('hidden');
-  btnCancel.onclick = () => closeModal();
+      btnCancel.innerText = "Batal";
+      btnCancel.classList.remove('hidden');
+      btnCancel.onclick = () => closeModal();
 
-  btnOk.innerText = "Saya Sudah Bayar";
-  const newBtnOk = btnOk.cloneNode(true);
-  btnOk.parentNode.replaceChild(newBtnOk, btnOk);
-  newBtnOk.onclick = () => showKonfirmasiForm(nominal);
+      btnOk.innerText = "Saya Sudah Bayar";
+      const newBtnOk = btnOk.cloneNode(true);
+      btnOk.parentNode.replaceChild(newBtnOk, btnOk);
+      newBtnOk.onclick = () => showKonfirmasiForm(nominal);
 
-  modal.classList.remove('hidden');
-  setTimeout(() => modal.classList.add('opacity-100'), 10);
-}
+      modal.classList.remove('hidden');
+      setTimeout(() => modal.classList.add('opacity-100'), 10);
+    }
     // 2. TAMPILKAN FORM KONFIRMASI SETELAH BAYAR
-  function showKonfirmasiForm(nominal) {
-  const msgEl = document.getElementById('modal-message');
-  const btnOk = document.getElementById('modal-btn-ok');
-  const btnCancel = document.getElementById('modal-btn-cancel');
+    function showKonfirmasiForm(nominal) {
+      const msgEl = document.getElementById('modal-message');
+      const btnOk = document.getElementById('modal-btn-ok');
+      const btnCancel = document.getElementById('modal-btn-cancel');
 
-  document.getElementById('modal-title').innerText = "Konfirmasi Pembayaran";
+      document.getElementById('modal-title').innerText = "Konfirmasi Pembayaran";
 
       msgEl.innerHTML = `
     <div class="space-y-4 text-left pt-2">
@@ -936,13 +995,13 @@ function upgradeToPremium() {
 
       btnOk.innerText = "Konfirmasi Sekarang";
       btnCancel.innerText = "Batal";
-  btnCancel.onclick = () => {
-    closeModal(); // Menutup modal
-  };
+      btnCancel.onclick = () => {
+        closeModal(); // Menutup modal
+      };
       // Re-bind button OK untuk proses final
-     const newBtnOk = btnOk.cloneNode(true);
-  btnOk.parentNode.replaceChild(newBtnOk, btnOk);
-  newBtnOk.onclick = () => {
+      const newBtnOk = btnOk.cloneNode(true);
+      btnOk.parentNode.replaceChild(newBtnOk, btnOk);
+      newBtnOk.onclick = () => {
         const channel = document.getElementById('pay-channel').value;
         const amount = document.getElementById('pay-amount').value;
         const date = document.getElementById('pay-date').value;
@@ -1256,7 +1315,7 @@ function upgradeToPremium() {
             <div class="overflow-y-auto p-6 space-y-8 bg-slate-50">
                 ${finalDisplay.length === 0 ? `
                     <div class="text-center py-20">
-                        <div class="bg-slate-200 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                        <div class="bg-slate-200 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-600 ">
                              <i class="fa-solid fa-magnifying-glass text-2xl"></i>
                         </div>
                         <p class="text-slate-500 font-bold">Tidak ditemukan riwayat kesalahan<br>untuk materi ${materi}.</p>
@@ -1265,7 +1324,7 @@ function upgradeToPremium() {
         const s = item.soal;
         return `
                     <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
-                        <div class="flex justify-between items-center text-[10px] font-black text-slate-400 uppercase">
+                        <div class="flex justify-between items-center text-[10px] font-black text-slate-600  uppercase">
                             <span class="bg-slate-100 px-2 py-0.5 rounded">Soal #${idx + 1}</span>
                             <span>Dikerjakan: ${new Date(item.tanggal).toLocaleDateString('id-ID')}</span>
                         </div>
@@ -1375,7 +1434,7 @@ function upgradeToPremium() {
       }
 
       if (rankingArr.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Belum ada riwayat kompetisi.</p>`;
+        container.innerHTML = `<p class="text-xs text-slate-600  text-center py-6">Belum ada riwayat kompetisi.</p>`;
         return;
       }
 
@@ -1391,7 +1450,7 @@ function upgradeToPremium() {
               <span class="font-extrabold text-slate-500 w-5">${goldMedal || (idx + 1)}</span>
               <div>
                 <h5 class="font-bold text-slate-800">${rk.nama}</h5>
-                <span class="text-[10px] text-slate-400 block">${rk.wilayah}</span>
+                <span class="text-[10px] text-slate-600  block">${rk.wilayah}</span>
               </div>
             </div>
             <strong class="text-indigo-600 font-extrabold">${rk.skor} Pts</strong>
@@ -1407,7 +1466,7 @@ function upgradeToPremium() {
       if (!container) return;
 
       if (allRiwayat.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Belum ada pengerjaan.</p>`;
+        container.innerHTML = `<p class="text-xs text-slate-600  text-center py-6">Belum ada pengerjaan.</p>`;
         return;
       }
 
@@ -1422,7 +1481,7 @@ function upgradeToPremium() {
                 ${rw.tipe_aktivitas.replace('_', ' ')}
               </span>
               <h5 class="font-extrabold text-slate-800">${isTO ? 'Try Out Simulasi' : rw.kategori_latihan}</h5>
-              <span class="text-[10px] text-slate-400 block">${dateStr}</span>
+              <span class="text-[10px] text-slate-600  block">${dateStr}</span>
             </div>
             <div class="text-right flex flex-col items-end">
               <strong class="text-indigo-600">${rw.skor_total} Pts</strong>
@@ -1486,7 +1545,7 @@ function upgradeToPremium() {
     <h2 class="text-xl font-extrabold flex items-center">
       <i class="fa-solid fa-user-gear text-amber-500 mr-2.5"></i> Dashboard Manajemen Admin
     </h2>
-    <p class="text-xs text-slate-400 mt-1">Gunakan tab di bawah ini untuk mengelola kualitas bank soal dan tryout.</p>
+    <p class="text-xs text-slate-600  mt-1">Gunakan tab di bawah ini untuk mengelola kualitas bank soal dan tryout.</p>
   </div>
 
   <!-- CONTAINER TAB MENU (Perbaikan di sini) -->
@@ -1568,11 +1627,11 @@ function upgradeToPremium() {
       if (allSoal.length === 0) {
         container.innerHTML = `
           <div class="text-center py-12">
-            <div class="p-4 bg-slate-50 text-slate-400 rounded-full inline-block mb-3">
+            <div class="p-4 bg-slate-50 text-slate-600  rounded-full inline-block mb-3">
               <i class="fa-solid fa-circle-check text-4xl"></i>
             </div>
             <h3 class="font-bold text-slate-800 text-base">Tidak ada antrean peninjauan</h3>
-            <p class="text-xs text-slate-400">Seluruh materi yang di-input staf telah dipublikasikan.</p>
+            <p class="text-xs text-slate-600 ">Seluruh materi yang di-input staf telah dipublikasikan.</p>
           </div>
         `;
         return;
@@ -1595,7 +1654,7 @@ function upgradeToPremium() {
                       <span class="bg-slate-200 text-slate-800 text-[10px] font-bold px-2 py-0.5 rounded font-mono">${s.kategori}</span>
                       <span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded font-mono">${s.sub_kategori}</span>
                     </div>
-                    <span class="text-[10px] text-slate-400">Editor: <strong>${creator}</strong></span>
+                    <span class="text-[10px] text-slate-600 ">Editor: <strong>${creator}</strong></span>
                   </div>
 
                   <div class="space-y-3">
@@ -1947,7 +2006,7 @@ function upgradeToPremium() {
         <!-- Kolom Chart (Kiri) -->
         <div class="lg:col-span-1 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm h-fit">
           <div class="flex justify-between items-center mb-3">
-            <h5 class="text-[11px] font-bold text-slate-400 uppercase">
+            <h5 class="text-[11px] font-bold text-slate-600  uppercase">
               ${currentKelolaDrilldown ? `Detail: ${currentKelolaDrilldown}` : 'Komposisi Bank Soal'}
             </h5>
             ${currentKelolaDrilldown ? `
@@ -1964,7 +2023,7 @@ function upgradeToPremium() {
 
         <!-- Kolom Filter (Kanan) -->
         <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm h-fit">
-          <h5 class="text-[11px] font-bold text-slate-400 uppercase mb-4">Filter Pencarian</h5>
+          <h5 class="text-[11px] font-bold text-slate-600  uppercase mb-4">Filter Pencarian</h5>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-[10px] font-bold text-slate-500 mb-1 text-left">KATEGORI UTAMA</label>
@@ -1996,7 +2055,7 @@ function upgradeToPremium() {
           ${totalItems === 0 ? `
             <div class="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
                <i class="fa-solid fa-folder-open text-slate-300 text-3xl mb-2"></i>
-               <p class="text-slate-400 text-xs">Tidak ada soal yang sesuai filter.</p>
+               <p class="text-slate-600  text-xs">Tidak ada soal yang sesuai filter.</p>
             </div>
           ` : paginatedSoal.map(s => `
             <div class="p-4 border border-slate-200 bg-white hover:border-indigo-300 transition rounded-xl flex justify-between items-center shadow-sm">
@@ -2008,7 +2067,7 @@ function upgradeToPremium() {
                   </span>
                 </div>
                 <p class="text-slate-700 font-semibold text-xs truncate">${s.pertanyaan}</p>
-                <div class="text-[9px] text-slate-400 mt-1 uppercase font-bold tracking-wider">${s.kategori} | ${s.sub_kategori}</div>
+                <div class="text-[9px] text-slate-600  mt-1 uppercase font-bold tracking-wider">${s.kategori} | ${s.sub_kategori}</div>
               </div>
               <div class="flex items-center space-x-1">
                 <button onclick="prepareEditSoal('${s.id_soal}')" class="text-indigo-600 hover:bg-indigo-50 p-2 rounded-lg"><i class="fa-regular fa-pen-to-square"></i></button>
@@ -2265,7 +2324,7 @@ function upgradeToPremium() {
                 </label>
               `).join('')}
             </div>
-            <p class="text-[9px] text-slate-400 mt-1">* Menampilkan 150 soal terbaru. Gunakan tombol Otomatis untuk set lengkap.</p>
+            <p class="text-[9px] text-slate-600  mt-1">* Menampilkan 150 soal terbaru. Gunakan tombol Otomatis untuk set lengkap.</p>
           </div>
 
           <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg transition">
@@ -2277,12 +2336,12 @@ function upgradeToPremium() {
       <div class="lg:col-span-2 space-y-4 text-xs">
         <h4 class="font-bold text-slate-800">Paket Ujian Aktif</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          ${allTryouts.length === 0 ? '<p class="text-slate-400">Belum ada paket.</p>' : allTryouts.map(to => `
+          ${allTryouts.length === 0 ? '<p class="text-slate-600 ">Belum ada paket.</p>' : allTryouts.map(to => `
             <div class="p-4 border border-slate-200 rounded-xl bg-slate-50/50 flex flex-col justify-between">
               <div>
                 <div class="flex justify-between items-center mb-1">
                   <span class="font-bold uppercase text-[9px] px-1.5 py-0.5 rounded ${to.tipe === 'premium' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}">${to.tipe}</span>
-                  <span class="text-slate-400"><i class="fa-regular fa-clock mr-1"></i>${to.durasi_menit}m</span>
+                  <span class="text-slate-600 "><i class="fa-regular fa-clock mr-1"></i>${to.durasi_menit}m</span>
                 </div>
                 <h5 class="font-bold text-slate-800 mb-1">${to.judul_tryout}</h5>
                 <p class="text-slate-500 mb-2">${to.daftar_id_soal ? to.daftar_id_soal.length : 0} Butir Soal</p>
@@ -2489,7 +2548,7 @@ function upgradeToPremium() {
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-              ${users.length === 0 ? '<tr><td colspan="4" class="p-10 text-center text-slate-400 font-bold">Data tidak ditemukan</td></tr>' : users.map(u => {
+              ${users.length === 0 ? '<tr><td colspan="4" class="p-10 text-center text-slate-600  font-bold">Data tidak ditemukan</td></tr>' : users.map(u => {
         const isSelf = currentUser && u.id_user === currentUser.id_user;
         const isPeserta = u.role === 'peserta';
         let sisaTeks = '<span class="text-slate-300">-</span>';
@@ -2503,7 +2562,7 @@ function upgradeToPremium() {
                   <tr class="hover:bg-slate-50 transition">
                     <td class="p-3">
                        <div class="font-bold text-slate-800">${u.nama}</div>
-                       <div class="text-[10px] text-slate-400">${u.email}</div>
+                       <div class="text-[10px] text-slate-600 ">${u.email}</div>
                        <div class="text-[9px] font-mono text-indigo-400">${u.id_user}</div>
                     </td>
                     <td class="p-3">
@@ -2663,30 +2722,30 @@ function upgradeToPremium() {
         }
       });
     }
-function startTryout(id) {
-  const allTryouts = getDB('cat_tryout') || [];
-  const to = allTryouts.find(t => t && t.id_tryout === id);
-  if (!to) return;
+    function startTryout(id) {
+      const allTryouts = getDB('cat_tryout') || [];
+      const to = allTryouts.find(t => t && t.id_tryout === id);
+      if (!to) return;
 
-  const sekarang = new Date();
-  if (to.waktu_mulai && sekarang < new Date(to.waktu_mulai)) {
-    showModal("Belum Dibuka", "Ujian ini terjadwal mulai: " + new Date(to.waktu_mulai).toLocaleString(), "warning");
-    return;
-  }
-  if (to.waktu_selesai && sekarang > new Date(to.waktu_selesai)) {
-    showModal("Sudah Tutup", "Maaf, masa pengerjaan Try Out ini sudah berakhir.", "error");
-    return;
-  }
+      const sekarang = new Date();
+      if (to.waktu_mulai && sekarang < new Date(to.waktu_mulai)) {
+        showModal("Belum Dibuka", "Ujian ini terjadwal mulai: " + new Date(to.waktu_mulai).toLocaleString(), "warning");
+        return;
+      }
+      if (to.waktu_selesai && sekarang > new Date(to.waktu_selesai)) {
+        showModal("Sudah Tutup", "Maaf, masa pengerjaan Try Out ini sudah berakhir.", "error");
+        return;
+      }
 
-  const allSoal = (getDB('cat_soal') || []).filter(s => s && s.status_review === 'published');
-  const list = to.daftar_id_soal ? to.daftar_id_soal.map(sid => allSoal.find(s => s && s.id_soal === sid)).filter(Boolean) : [];
+      const allSoal = (getDB('cat_soal') || []).filter(s => s && s.status_review === 'published');
+      const list = to.daftar_id_soal ? to.daftar_id_soal.map(sid => allSoal.find(s => s && s.id_soal === sid)).filter(Boolean) : [];
 
-  if (list.length === 0) {
-    showModal("Gagal", "Soal tidak ditemukan. Pastikan status soal sudah 'published'.", "error");
-    return;
-  }
-  setupExamSession('tryout', to.id_tryout, to.judul_tryout, list, to.durasi_menit);
-}
+      if (list.length === 0) {
+        showModal("Gagal", "Soal tidak ditemukan. Pastikan status soal sudah 'published'.", "error");
+        return;
+      }
+      setupExamSession('tryout', to.id_tryout, to.judul_tryout, list, to.durasi_menit);
+    }
     function setupExamSession(type, toId, title, listSoal, durasiM, katLat = "") {
       testSession = {
         tipe_aktivitas: type,
@@ -2734,131 +2793,135 @@ function startTryout(id) {
       }, 1000);
     }
 
-    function renderUjian() {
-      const main = document.getElementById('main-content');
-      if (!testSession || !main) return;
+function renderUjian() {
+  const main = document.getElementById('main-content');
+  if (!testSession || !main) return;
 
-      const activeIdx = testSession.index_aktif;
-      const totalSoal = testSession.soal.length;
-      const soalAktif = testSession.soal[activeIdx];
+  const activeIdx = testSession.index_aktif;
+  const totalSoal = testSession.soal.length;
+  const soalAktif = testSession.soal[activeIdx];
+  if (!soalAktif) return;
 
-      // Pastikan soal ada
-      if (!soalAktif) return;
+  const jwbDipilih = testSession.jawaban[soalAktif.id_soal] || null;
 
-      const jwbDipilih = testSession.jawaban[soalAktif.id_soal] || null;
+  // Tema warna per kategori
+  const config = {
+    "TWK": { color: "indigo", bg: "bg-indigo-600", text: "text-indigo-600", light: "bg-indigo-50" },
+    "TIU": { color: "emerald", bg: "bg-emerald-600", text: "text-emerald-600", light: "bg-emerald-50" },
+    "TKP": { color: "amber", bg: "bg-amber-500", text: "text-amber-600", light: "bg-amber-50" }
+  }[soalAktif.kategori] || { color: "indigo", bg: "bg-indigo-600", text: "text-indigo-600", light: "bg-indigo-50" };
 
-      // KONFIGURASI VISUAL PER KATEGORI
-      const configKategori = {
-        "TWK": { label: "BAGIAN I: TES WAWASAN KEBANGSAAN (TWK)", color: "bg-blue-600" },
-        "TIU": { label: "BAGIAN II: TES INTELIGENSIA UMUM (TIU)", color: "bg-emerald-600" },
-        "TKP": { label: "BAGIAN III: TES KARAKTERISTIK PRIBADI (TKP)", color: "bg-amber-500" }
-      };
-      const currentStyle = configKategori[soalAktif.kategori] || configKategori["TWK"];
-
-      main.innerHTML = `
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-      <!-- SIDEBAR NAVIGASI -->
-      <div class="lg:col-span-1 space-y-4 order-2 lg:order-1">
-        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-center">
-          <span class="text-xs text-slate-400 font-bold block mb-1 uppercase tracking-wider">Sisa Waktu</span>
-          <div class="text-3xl font-mono font-black text-indigo-900" id="exam-timer">--:--</div>
-        </div>
-
-        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-          <h4 class="text-xs font-extrabold text-slate-800 uppercase mb-3">Navigasi Nomor</h4>
-          <div class="grid grid-cols-5 gap-2">
-            ${testSession.soal.map((s, idx) => {
-        const isTerisi = testSession.jawaban[s.id_soal];
-        const isAktif = idx === activeIdx;
-        let btnClass = isTerisi ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600';
-        if (isAktif) btnClass = 'ring-4 ring-amber-400 font-black scale-105 z-10';
-        return `<button onclick="pindahSoal(${idx})" class="w-full aspect-square text-[11px] font-bold rounded-lg flex items-center justify-center transition-all ${btnClass}">${idx + 1}</button>`;
-      }).join('')}
+  main.innerHTML = `
+    <div class="max-w-2xl mx-auto pb-32">
+      
+      <!-- HEADER STICKY (Sisa Waktu & Progress) -->
+      <div class="sticky top-0 z-40 bg-slate-50/90 backdrop-blur-md pt-2 pb-4 border-b border-slate-200">
+        <div class="flex justify-between items-center px-1 mb-3">
+          <div class="flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full ${config.bg} animate-pulse"></span>
+            <span class="text-[11px] font-black text-slate-500 uppercase tracking-tighter">Sisa Waktu:</span>
+            <span id="exam-timer" class="text-sm font-mono font-black text-slate-800">--:--</span>
+          </div>
+          <div class="text-[11px] font-black text-slate-400 uppercase">
+            Soal <span class="text-slate-900">${activeIdx + 1}</span> / ${totalSoal}
           </div>
         </div>
-
-        <button onclick="confirmSelesaiUjian()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-extrabold py-4 rounded-2xl text-sm transition shadow-lg shadow-rose-100 flex items-center justify-center">
-          Selesaikan Ujian
-        </button>
+        <!-- Progress Bar Halus -->
+        <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+          <div class="h-full ${config.bg} transition-all duration-500" style="width: ${((activeIdx + 1) / totalSoal) * 100}%"></div>
+        </div>
       </div>
 
-      <!-- AREA PERTANYAAN -->
-      <div class="lg:col-span-3 space-y-4 order-1 lg:order-2">
-        <div class="${currentStyle.color} text-white px-6 py-4 rounded-2xl shadow-md flex justify-between items-center transition-all">
-           <h2 class="font-black text-sm md:text-base tracking-wide uppercase">${currentStyle.label}</h2>
-           <span class="bg-black/10 px-3 py-1 rounded-full text-[10px] font-bold">NOMOR ${activeIdx + 1}</span>
+      <!-- AREA SOAL -->
+      <div class="mt-6 px-1 animate-scale-up">
+        <div class="flex items-center space-x-2 mb-4">
+           <span class="px-2 py-1 ${config.light} ${config.text} rounded text-[10px] font-black uppercase tracking-widest border border-${config.color}-100">
+             ${soalAktif.kategori}
+           </span>
+           <span class="text-[10px] text-slate-400 font-medium">| ${soalAktif.sub_kategori}</span>
         </div>
 
-        <div class="bg-white rounded-2xl p-6 md:p-8 border border-slate-100 shadow-sm space-y-8">
-          
-          <!-- Box Pertanyaan -->
-          <div class="space-y-4">
-             <div class="flex items-start space-x-4">
-                <div class="bg-slate-100 text-slate-500 font-black px-3 py-1 rounded-lg text-sm">${activeIdx + 1}</div>
-                <div class="text-slate-800 text-sm md:text-lg font-bold leading-relaxed pt-1">
-                    ${soalAktif.pertanyaan || "Pertanyaan tidak ditemukan."}
-                </div>
-             </div>
+        <!-- Teks Pertanyaan Utama -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-6">
+          <h2 class="soal-text text-lg md:text-xl font-bold text-slate-900">
+            ${soalAktif.pertanyaan}
+          </h2>
+          ${soalAktif.url_gambar ? `
+            <div class="mt-5 rounded-xl overflow-hidden border border-slate-100 bg-slate-50">
+              <img src="${soalAktif.url_gambar}" class="w-full h-auto object-contain max-h-72 mx-auto">
+            </div>
+          ` : ''}
+        </div>
 
-             <!-- Gambar Soal (Jika ada) -->
-             ${soalAktif.url_gambar ? `
-               <div class="ml-0 md:ml-12 p-2 bg-white border border-slate-200 rounded-2xl shadow-sm inline-block max-w-full">
-                 <img src="${soalAktif.url_gambar}" class="max-w-full h-auto max-h-80 rounded-lg mx-auto" alt="Gambar Soal">
-               </div>
-             ` : ''}
-          </div>
-
-          <!-- Pilihan Jawaban -->
-          <div class="space-y-3 ml-0 md:ml-12">
-            ${['A', 'B', 'C', 'D', 'E'].map(opt => {
-        const optText = soalAktif[`opsi_${opt.toLowerCase()}`];
-        const optImg = soalAktif[`img_${opt.toLowerCase()}`];
-        const isChecked = jwbDipilih === opt;
-
-        // Style saat dipilih
-        const styleBox = isChecked
-          ? 'border-indigo-600 bg-indigo-50/50 ring-2 ring-indigo-500/20 shadow-md'
-          : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50';
-
-        const styleCircle = isChecked
-          ? 'bg-indigo-600 border-indigo-600 text-white'
-          : 'bg-white border-slate-300 text-slate-400';
-
-        return `
-                <div onclick="pilihOpsi('${opt}')" class="flex items-start p-4 border-2 rounded-2xl cursor-pointer transition-all ${styleBox}">
-                  <div class="flex-shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center mr-4 mt-0.5 font-black text-xs ${styleCircle}">
+        <!-- PILIHAN JAWABAN -->
+        <div class="space-y-3">
+          ${['A', 'B', 'C', 'D', 'E'].map(opt => {
+            const isSelected = jwbDipilih === opt;
+            const text = soalAktif[`opsi_${opt.toLowerCase()}`];
+            const img = soalAktif[`img_${opt.toLowerCase()}`];
+            
+            return `
+              <div onclick="pilihOpsi('${opt}')" class="active-scale transition-all group">
+                <div class="flex items-start p-4 rounded-2xl border-2 transition-all cursor-pointer
+                  ${isSelected 
+                    ? `border-${config.color}-500 ${config.light} shadow-md` 
+                    : 'border-white bg-white hover:border-slate-200 shadow-sm'}">
+                  
+                  <div class="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm 
+                    ${isSelected ? `${config.bg} text-white` : 'bg-slate-100 text-slate-500'}">
                     ${opt}
                   </div>
-                  <div class="flex flex-col space-y-3 w-full">
-                    ${optText ? `<div class="text-sm md:text-base font-semibold text-slate-700">${optText}</div>` : ''}
-                    
-                    <!-- Gambar Opsi (Jika ada) -->
-                    ${optImg ? `
-                      <div class="max-w-[250px]">
-                        <img src="${optImg}" class="rounded-lg border border-slate-200 shadow-sm h-auto max-h-40 bg-white p-1">
-                      </div>
-                    ` : ''}
+
+                  <div class="ml-4 flex-grow">
+                    <p class="text-sm md:text-base font-semibold leading-relaxed ${isSelected ? `text-${config.color}-900` : 'text-slate-700'}">
+                      ${text}
+                    </p>
+                    ${img ? `<img src="${img}" class="mt-3 rounded-lg max-h-40 border border-slate-100 bg-white">` : ''}
                   </div>
                 </div>
-              `;
-      }).join('')}
-          </div>
-
-          <!-- Navigasi Bawah -->
-          <div class="flex justify-between pt-8 border-t border-slate-100">
-            <button onclick="navBack()" ${activeIdx === 0 ? 'disabled' : ''} class="px-6 py-2.5 border border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition">
-              <i class="fa-solid fa-chevron-left mr-2"></i> Sebelumnya
-            </button>
-            <button onclick="navNext()" ${activeIdx === totalSoal - 1 ? 'disabled' : ''} class="px-6 py-2.5 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-900 shadow-lg disabled:opacity-30 transition">
-              Berikutnya <i class="fa-solid fa-chevron-right ml-2"></i>
-            </button>
-          </div>
-
+              </div>
+            `;
+          }).join('')}
         </div>
       </div>
+
+      <!-- NAVIGASI FLOATING (Bawah HP) -->
+      <div class="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-xl border-t border-slate-200 z-50">
+        <div class="max-w-2xl mx-auto flex items-center space-x-3">
+          <!-- Tombol Back -->
+          <button onclick="navBack()" ${activeIdx === 0 ? 'disabled' : ''} 
+            class="w-12 h-12 flex items-center justify-center rounded-2xl bg-slate-100 text-slate-600 disabled:opacity-20 active-scale transition-all">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          
+          <!-- Nomor Soal (Horizontal Scroll) -->
+          <div class="flex-grow overflow-x-auto nav-scroll py-1 px-1">
+             <div class="flex space-x-2">
+               ${testSession.soal.map((_, i) => {
+                 const terisi = testSession.jawaban[testSession.soal[i].id_soal];
+                 const aktif = i === activeIdx;
+                 return `
+                   <button onclick="pindahSoal(${i})" class="flex-shrink-0 w-9 h-9 rounded-xl text-[11px] font-black transition-all
+                     ${aktif ? `${config.bg} text-white scale-110 shadow-lg shadow-${config.color}-200` : (terisi ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-200 text-slate-500')}">
+                     ${i + 1}
+                   </button>
+                 `;
+               }).join('')}
+             </div>
+          </div>
+
+          <!-- Tombol Next / Selesai -->
+          <button onclick="${activeIdx === totalSoal - 1 ? 'confirmSelesaiUjian()' : 'navNext()'}" 
+            class="flex-grow h-12 px-6 rounded-2xl font-black text-xs tracking-widest transition-all active-scale shadow-lg
+              ${activeIdx === totalSoal - 1 ? 'bg-rose-600 text-white' : 'bg-slate-900 text-white'}">
+            ${activeIdx === totalSoal - 1 ? 'FINISH' : 'NEXT'}
+          </button>
+        </div>
+      </div>
+
     </div>
-    `;
-    }
+  `;
+}
     function pindahSoal(idx) {
       if (testSession) {
         testSession.index_aktif = idx;
@@ -2960,7 +3023,7 @@ function startTryout(id) {
     function renderReviewUjian() {
       const main = document.getElementById('main-content');
       if (!reviewSession || !main) {
-        if (main) main.innerHTML = `<p class="text-center py-12 text-slate-400">Tidak ada review aktif.</p>`;
+        if (main) main.innerHTML = `<p class="text-center py-12 text-slate-600 ">Tidak ada review aktif.</p>`;
         return;
       }
 
@@ -3028,7 +3091,7 @@ function startTryout(id) {
           return `
                         <div class="p-3 border rounded-xl flex justify-between items-center ${borderClass} ${bgClass}">
                           <span><strong>${opt}.</strong> ${text}</span>
-                          <span class="text-[10px] text-slate-400 font-mono">Poin: ${s.bobot_nilai?.[opt] || 0}</span>
+                          <span class="text-[10px] text-slate-600  font-mono">Poin: ${s.bobot_nilai?.[opt] || 0}</span>
                         </div>
                       `;
         }).join('')}
